@@ -4,8 +4,7 @@
   "description": "",
   "main": "src/main.js",
   "scripts": {
-    "task": "node -r esm src/main.js",
-    "bump": "ncu -u -t minor"
+    "task": "node -r esm src/main.js"
   },
   "repository": {
     "type": "git",
@@ -22,7 +21,6 @@
     "esm": "^3.2.25",
     "jsdom": "^19.0.0",
     "node-fetch": "2.7.0",
-    "npm-check-updates": "^12.5.12",
     "puppeteer": "^18.1.0"
   }
 }
