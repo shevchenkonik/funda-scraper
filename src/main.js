@@ -56,17 +56,17 @@ Link: **[click here](${path})**
                 `;
             }
 
-            // nodeFetch(`https://api.telegram.org/bot${BOT_API}/sendMessage`, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify({
-            //         text,
-            //         chat_id : CHAT_ID,
-            //         parse_mode : 'markdown',
-            //     }),
-            // });
+            nodeFetch(`https://api.telegram.org/bot${BOT_API}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text,
+                    chat_id : CHAT_ID,
+                    parse_mode : 'markdown',
+                }),
+            });
         });
     }
 };
