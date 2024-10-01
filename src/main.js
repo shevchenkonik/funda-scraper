@@ -9,12 +9,18 @@ const WIDTH = 1920;
 const HEIGHT = 1080;
 
 const data = readFileSync('db.json', { encoding:'utf8', flag: 'r' });
-const urls = readFileSync(`${__dirname}/urls.json`, { encoding:'utf8', flag: 'r' });
+
 const pastResults = new Set(JSON.parse(data) || []);
 console.log('pastResults:', pastResults);
 const newResults = new Set();
 const houses = [];
 const { CHAT_ID, BOT_API } = process.env;
+
+const urls = [
+    "https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22amsterdam,15km%22%5D&rooms=%222-4%22&publication_date=%221%22&availability=%5B%22available%22%5D&object_type=%5B%22apartment%22%5D&price=%22-2300%22",
+    "https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22haarlem,5km%22%5D&price=%22-2100%22&rooms=%222-%22&publication_date=%223%22&availability=%5B%22available%22%5D",
+    "https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22rotterdam%22%5D&price=%22-2100%22&publication_date=%221%22&availability=%5B%22available%22%5D&object_type=%5B%22apartment%22%5D&rooms=%222-3%22&floor_area=%2250-%22"
+]
 
 const runTask = async () => {
     for (const url of urls) {
