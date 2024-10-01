@@ -19,7 +19,7 @@ const urls = [
     // 'https://www.funda.nl/en/huur/amsterdam/beschikbaar/0-2000/2+kamers/1-dag/+15km/',
     'https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22amsterdam,15km%22%5D&rooms=%222-4%22&publication_date=%221%22&availability=%5B%22available%22%5D&object_type=%5B%22apartment%22%5D&price=%22-2300%22',
     'https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22haarlem,5km%22%5D&price=%22-2100%22&rooms=%222-%22&publication_date=%223%22&availability=%5B%22available%22%5D',
-    'https://www.funda.nl/en/zoeken/kaart/huur?selected_area=%5B%22rotterdam%22%5D&price=%22-2100%22&publication_date=%221%22&availability=%5B%22available%22%5D&object_type=%5B%22apartment%22%5D&rooms=%222-3%22&floor_area=%2250-%22'
+    'https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22rotterdam%22%5D&price=%22-2100%22&publication_date=%221%22&availability=%5B%22available%22%5D&object_type=%5B%22apartment%22%5D&rooms=%222-3%22&floor_area=%2250-%22'
 ];
 
 const runTask = async () => {
