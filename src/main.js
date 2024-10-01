@@ -35,37 +35,23 @@ const runTask = async () => {
 
         console.log('sending messages to Telegram');
         const date = (new Date()).toISOString().split('T')[0];
+
         houses.forEach(({
             path,
-            income,
-            residentsAge0to14,
-            residentsAge15to24,
-            residentsAge25to44,
-            residentsAge45to64,
-            residentsAge65AndOlder,
-            householdsWithChildren,
-            neighbourhoodName,
-            municipalityName,
-            residentsCount,
-            totalImmigrantsCount,
+            price,
+            address,
+            postalCode,
         }) => {
-            let text = `New apartment on ${date}: [click here](${path})`;
+            let text = ``;
 
-            if (income) {
-                let extraStuff = `
-                    residentsIncome: **${income}**
-                    neighbourhoodName: **${neighbourhoodName}**
-                    municipalityName: **${municipalityName}**
-                    residentsAge0to14: **${residentsAge0to14}**
-                    residentsAge15to24: **${residentsAge15to24}**
-                    residentsAge25to44: **${residentsAge25to44}**
-                    residentsAge45to64: **${residentsAge45to64}**
-                    residentsAge65AndOlder: **${residentsAge65AndOlder}**
-                    householdsWithChildren: **${householdsWithChildren}**
-                    residentsCount: **${residentsCount}**
-                    totalImmigrantsCount: **${totalImmigrantsCount}**
+            if (price) {
+                text = `
+Price: *${price}*
+Address: *${address}*
+Date: *${date}*
+Postal code: *${postalCode}*
+Link: **[click here](${path})**
                 `;
-                text = `${text}\n${extraStuff}`;
             }
 
             nodeFetch(`https://api.telegram.org/bot${BOT_API}/sendMessage`, {
@@ -114,14 +100,23 @@ const runPuppeteer = async (url) => {
 
         const urlPath = element?.querySelector('[data-test-id="object-image-link"]').href;
 
+        const price = element?.querySelector('[data-test-id="price-rent"]').textContent.trim();
+        const postalCode = element?.querySelector('[data-test-id="postal-code-city"]').textContent.trim();
+        const address = element?.querySelector('[data-test-id="street-name-house-number"]').textContent.trim();
+
         let path = urlPath;
 
-        console.log(path)
-
         if (path && !pastResults.has(path) && !newResults.has(path)) {
-            // let extraDetails = {};
+            let extraDetails = {};
+
+            extraDetails = {
+                price,
+                postalCode,
+                address
+            }
+
             // const zipCode = getZipCode(subtitleText || '');
-            //
+
             // if (zipCode) {
             //     const neighbourhoodData = await getNeighbourhoodData(zipCode);
             //
@@ -151,7 +146,7 @@ const runPuppeteer = async (url) => {
 
             newResults.add(path);
             houses.push({
-                // ...extraDetails,
+                ...extraDetails,
                 path,
             });
         }
