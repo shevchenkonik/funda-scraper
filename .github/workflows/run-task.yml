@@ -2,7 +2,7 @@ name: Run Task
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *" # each hour
+    - cron: "*/1 * * * *" # each hour
 
 jobs:
   build-and-deploy:
