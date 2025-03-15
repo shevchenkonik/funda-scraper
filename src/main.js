@@ -3,7 +3,6 @@ const { writeFileSync, readFileSync } = require('fs');
 const puppeteer = require('puppeteer');
 const jsdom = require('jsdom');
 const nodeFetch = require('node-fetch');
-const { getZipCode, getNeighbourhoodData, convertResidentsToPercentage} = require('./utils/utils');
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -17,17 +16,13 @@ const houses = [];
 const { CHAT_ID, BOT_API } = process.env;
 
 const urls = [
-    "https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22amsterdam,15km%22%5D&rooms=%222-4%22&publication_date=%221%22&availability=%5B%22available%22%5D&object_type=%5B%22apartment%22%5D&price=%22-2300%22",
-    "https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22haarlem,5km%22%5D&price=%22-2100%22&rooms=%222-%22&publication_date=%223%22&availability=%5B%22available%22%5D",
-    "https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22rotterdam%22%5D&price=%22-2100%22&publication_date=%221%22&availability=%5B%22available%22%5D&object_type=%5B%22apartment%22%5D&rooms=%222-3%22&floor_area=%2250-%22"
+    "https://www.funda.nl/en/zoeken/huur?selected_area=%5B%22rotterdam%22%5D"
 ]
 
 const runTask = async () => {
-    for (const url of urls) {
-        await runPuppeteer(url);
-    }
+    for (const url of urls) await runPuppeteer(url)
 
-    console.log('newResults:', newResults);
+    console.log(`[Custom Logger]: ${newResults}`)
 
     if (newResults.size > 0) {
         writeFileSync('db.json', JSON.stringify(Array.from([
@@ -35,26 +30,28 @@ const runTask = async () => {
             ...pastResults,
         ])));
 
-        console.log('sending messages to Telegram');
+        console.log('[Custom Logger] Sending messages to Telegram')
+
         const date = (new Date()).toISOString().split('T')[0];
 
         houses.forEach(({
             path,
             price,
-            address,
+            full_address,
             postalCode,
         }) => {
             let text = ``;
 
             if (price) {
                 text = `
+Full Address: *${full_address}*                
 Price: *${price}*
-Address: *${address}*
 Date: *${date}*
-Postal code: *${postalCode}*
 Link: **[click here](${path})**
                 `;
             }
+
+            console.log(text)
 
             nodeFetch(`https://api.telegram.org/bot${BOT_API}/sendMessage`, {
                 method: 'POST',
@@ -72,7 +69,8 @@ Link: **[click here](${path})**
 };
 
 const runPuppeteer = async (url) => {
-    console.log('opening headless browser');
+    console.log('[Custom Logger] Opening headless browser')
+
     const browser = await puppeteer.launch({
         headless: true,
         args: [`--window-size=${WIDTH},${HEIGHT}`],
@@ -80,83 +78,59 @@ const runPuppeteer = async (url) => {
             width: WIDTH,
             height: HEIGHT,
         },
-    });
+    })
 
     const page = await browser.newPage();
     // https://stackoverflow.com/a/51732046/4307769 https://stackoverflow.com/a/68780400/4307769
     await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36');
 
-    console.log('going to funda');
+    console.log('[Custom Logger] Going to funda.nl')
+
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
     const htmlString = await page.content();
-    const dom = new jsdom.JSDOM(htmlString);
+    const dom = await new jsdom.JSDOM(htmlString);
 
-    console.log('parsing funda.nl data');
-
-    const result = dom.window.document.querySelectorAll('[data-test-id="search-result-item"]')
+    const result = dom.window.document.querySelectorAll('[data-testid="listingDetailsAddress"]')
+    console.log('[Custom Logger] Parsing funda.nl data');
 
     for (const element of result) {
-        const urlPath = element?.querySelector('[data-test-id="object-image-link"]').href;
+        let parent = element.parentElement; // Начинаем с родительского элемента
+        let detectedParent = null
 
-        const price = element?.querySelector('[data-test-id="price-rent"]').textContent.trim();
-        const postalCode = element?.querySelector('[data-test-id="postal-code-city"]').textContent.trim();
-        const address = element?.querySelector('[data-test-id="street-name-house-number"]').textContent.trim();
-
-        let path = urlPath;
-
-        if (path && !pastResults.has(path) && !newResults.has(path)) {
-            let extraDetails = {};
-
-            extraDetails = {
-                price,
-                postalCode,
-                address
+        // Поднимаемся по дереву DOM, пока не найдём элемент с классом border-b
+        while (parent) {
+            if (parent.classList && parent.classList.contains('border-b')) {
+                detectedParent = parent
+                break; // Выходим из цикла, если нашли
             }
+            parent = parent.parentElement; // Переходим к следующему родителю
+        }
 
-            // const zipCode = getZipCode(subtitleText || '');
+        const urlPath = `https://www.funda.nl/en${element.getAttribute('href')}`
+        const price = detectedParent?.querySelector('div.font-semibold.mt-2.mb-0')?.textContent.trim()
+        const full_address = element.textContent.trim()
 
-            // if (zipCode) {
-            //     const neighbourhoodData = await getNeighbourhoodData(zipCode);
-            //
-            //     if (neighbourhoodData) {
-            //         const residentsCount = neighbourhoodData?.['AantalInwoners_5']?.value || 0;
-            //         const westernImmigrantsCount = neighbourhoodData?.['WestersTotaal_17']?.value || 0;
-            //         const nonWesternImmigrantsCount = neighbourhoodData?.['NietWestersTotaal_18']?.value || 0;
-            //         const totalImmigrantsCount = westernImmigrantsCount + nonWesternImmigrantsCount;
-            //         const income = neighbourhoodData?.['GemiddeldInkomenPerInwoner_66']?.value * 1000;
-            //
-            //         extraDetails = {
-            //             ...extraDetails,
-            //             income,
-            //             residentsAge0to14: neighbourhoodData['k_0Tot15Jaar_8'].value,
-            //             residentsAge15to24: neighbourhoodData['k_15Tot25Jaar_9'].value,
-            //             residentsAge25to44: neighbourhoodData['k_25Tot45Jaar_10'].value,
-            //             residentsAge45to64: neighbourhoodData['k_45Tot65Jaar_11'].value,
-            //             residentsAge65AndOlder: neighbourhoodData['k_65JaarOfOuder_12'].value,
-            //             householdsWithChildren: neighbourhoodData['HuishoudensMetKinderen_31'].value,
-            //             totalImmigrantsCount,
-            //             neighbourhoodName: neighbourhoodData.neighbourhoodName.value,
-            //             municipalityName: neighbourhoodData.municipalityName.value,
-            //             residentsCount,
-            //         };
-            //     }
-            // }
+        if (urlPath && !pastResults.has(urlPath) && !newResults.has(urlPath)) {
+            let extraDetails = {}
 
-            newResults.add(path);
+            extraDetails = { price, full_address }
+
+            newResults.add(urlPath)
+
             houses.push({
                 ...extraDetails,
-                path,
-            });
+                path: urlPath
+            })
         }
     }
 
-    console.log('closing browser');
+    console.log('[Custom Logger] Closing browser');
     await browser.close();
 };
 
 if (CHAT_ID && BOT_API) {
     runTask();
 } else {
-    console.log('Missing Telegram API keys!');
+    console.log('[Custom Logger] Missing Telegram API keys');
 }
