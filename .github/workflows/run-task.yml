@@ -1,32 +1,32 @@
-name: Run Task
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 * * * *" # each hour
+# name: Run Task
+# # on:
+# #   workflow_dispatch:
+# #   schedule:
+# #     - cron: "0 * * * *" # each hour
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
+#     permissions:
+#       contents: write
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+#         with:
+#           ref: ${{ github.head_ref }}
 
-      - name: Running
-        run: |
-          npm cache clean --force
-          npm install
-          npm run task
-        env:
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-          BOT_API: ${{ secrets.BOT_API }}
+#       - name: Running
+#         run: |
+#           npm cache clean --force
+#           npm install
+#           npm run task
+#         env:
+#           CHAT_ID: ${{ secrets.CHAT_ID }}
+#           BOT_API: ${{ secrets.BOT_API }}
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Update db.json
-          branch: main
+#       - uses: stefanzweifel/git-auto-commit-action@v5
+#         with:
+#           commit_message: Update db.json
+#           branch: main
